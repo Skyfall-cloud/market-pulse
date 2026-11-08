@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Market Pulse</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#0e1a1f">
+<style>
+:root{--bg:#f3f1ec;--card:#fff;--ink:#14262c;--mute:#5d6e73;--line:#d9d6cd;--g:#2f8f5b;--r:#c4483c;--y:#d29a2a;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1a1f;--card:#15262c;--ink:#e8efee;--mute:#93a7ab;--line:#26393f;--g:#4fc28a;--r:#e86a5c;--y:#e0b04a;color-scheme:dark}}
+*{box-sizing:border-box}html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 ui-rounded,"SF Pro Rounded",system-ui,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:1.1rem;margin:0 0 2px;font-weight:600}.mute{color:var(--mute);font-size:.85rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+.tabs{display:flex;gap:6px;overflow-x:auto}.tabs button{flex:none;border:1px solid var(--line);background:none;color:var(--ink);padding:8px 12px;border-radius:99px;font:inherit;font-size:.9rem}
+.tabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}button:focus-visible{outline:2px solid var(--y);outline-offset:2px}
+.score{font-size:4.2rem;font-weight:700;line-height:1;letter-spacing:-.03em}
+.bar{height:10px;border-radius:5px;background:linear-gradient(90deg,var(--r),var(--y),var(--g));position:relative;margin:14px 0 6px}
+.bar i{position:absolute;top:-4px;width:4px;height:18px;border-radius:2px;background:var(--ink);transform:translateX(-2px)}
+.row{display:grid;grid-template-columns:110px 1fr 40px;gap:10px;align-items:center;margin:9px 0;font-size:.92rem}
+.row div{height:8px;border-radius:4px;background:var(--line);overflow:hidden}.row b{display:block;height:100%}.row span:last-child{text-align:right}
+.lamp{display:flex;gap:14px;align-items:center}.dot{width:46px;height:46px;border-radius:50%;flex:none}
+dl{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin:12px 0 0;font-size:.9rem}dd{margin:0;text-align:right}
+.ok{color:var(--g)}.no{color:var(--r)}.rng{display:flex;gap:6px;margin-top:8px}.rng button{padding:4px 10px;font-size:.8rem}
+svg{width:100%;height:auto;display:block}.grid{stroke:var(--line)}.ln{fill:none;stroke:var(--ink);stroke-width:2}
+</style></head><body><main id="app"><p class="mute">Lade Daten …</p></main>
+<script>
+const A={trend:"Trend",momentum:"Momentum",vol:"Volatilität",breadth:"Marktbreite",risk:"Risikoappetit"};
+const col=s=>`hsl(${Math.round(s*1.2)} 55% 45%)`;let L,H,sel="ALL",rng=250;
+const f=n=>n==null?"–":n.toLocaleString("de-DE");
+async function load(){try{[L,H]=await Promise.all(["latest","history"].map(n=>fetch(`data/${n}.json?${Date.now()}`).then(r=>{if(!r.ok)throw 0;return r.json()})));draw()}
+catch{document.getElementById("app").innerHTML='<p>Noch keine Daten. Starte im GitHub-Repository den Workflow „Update Market Pulse“.</p>'}}
+function chart(){const d=H.filter(r=>r[sel]!=null).slice(-rng);if(d.length<2)return'<p class="mute">Der Verlauf füllt sich ab dem ersten Lauf.</p>';
+const x=i=>10+i*580/(d.length-1),y=v=>190-v*1.8,p=d.map((r,i)=>`${x(i)},${y(r[sel])}`).join(" ");
+return`<svg viewBox="0 0 600 200" role="img" aria-label="Verlauf Score">${[20,40,60,80].map(g=>`<line class="grid" x1="10" x2="590" y1="${y(g)}" y2="${y(g)}"/>`).join("")}<polyline class="ln" points="${p}"/></svg><p class="mute">${d[0].d} bis ${d.at(-1).d}</p>`}
+function draw(){const m=L.markets[sel],a=L.ampel,ok=a.status==="green",ch=a.checks||{};
+const cr=Object.entries(L.crosses).map(([k,c])=>`${L.markets[k].name}: ${c.type} am ${new Date(c.date).toLocaleDateString("de-DE")}`);
+document.getElementById("app").innerHTML=`
+<h1>Market Pulse</h1><p class="mute">Stand ${L.date}</p>
+<div class="tabs">${Object.entries(L.markets).map(([k,v])=>`<button class="${k===sel?"on":""}" onclick="sel='${k}';draw()">${v.name.replace(" (URTH)","")}</button>`).join("")}</div>
+<section class="card"><div class="score" style="color:${col(m.score)}">${Math.round(m.score)}</div><div>${m.label}</div>
+<div class="bar"><i style="left:${m.score}%"></i></div><p class="mute">Stärke des Marktumfelds von 0 bis 100. Das ist kein Kauf- oder Verkaufssignal.</p>
+${Object.entries(m.areas).map(([k,v])=>`<div class="row"><span>${A[k]}</span><div><b style="width:${v}%;background:${col(v)}"></b></div><span>${Math.round(v)}</span></div>`).join("")}</section>
+<section class="card"><strong>Verlauf</strong>${chart()}<div class="tabs rng">${[[90,"3 Monate"],[250,"1 Jahr"],[9999,"Alles"]].map(([n,t])=>`<button class="${n===rng?"on":""}" onclick="rng=${n};draw()">${t}</button>`).join("")}</div></section>
+<section class="card"><div class="lamp"><div class="dot" style="background:var(${ok?"--g":"--r"})"></div><div><strong>${ok?"Investierbar":a.status==="red"?"Cash-Quote":"Keine Ampel"}</strong><div class="mute">Strategie-Ampel, angelehnt an LetMoneyWork</div></div></div>
+<dl>${Object.entries(a.items).map(([k,v])=>`<dt>${k}</dt><dd>${f(v)}</dd>`).join("")}
+<dt>Trend</dt><dd class="${ch.trend?"ok":"no"}">${ch.trend?"grün":"rot"}</dd><dt>VIX</dt><dd class="${ch.vix?"ok":"no"}">${ch.vix?"grün":"rot"}</dd>
+<dt>Fear &amp; Greed</dt><dd class="${ch.fear_greed===null?"":ch.fear_greed?"ok":"no"}">${ch.fear_greed===null?"nicht verfügbar":ch.fear_greed?"grün":"rot"}</dd></dl></section>
+<section class="card"><strong>Golden und Death Cross</strong><p class="mute">Letztes Ereignis von SMA 50 und SMA 200</p>${cr.map(c=>`<div>${c}</div>`).join("")||"–"}</section>
+${L.warnings.length?`<section class="card mute"><strong>Hinweise zum Datenabruf</strong><br>${L.warnings.join("<br>")}</section>`:""}
+<p class="mute">Aktualisiert ${L.updated}. Private Analysehilfe, keine Anlageberatung.</p>`}
+load();if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
+</script></body></html>

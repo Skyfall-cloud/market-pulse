@@ -1,0 +1,4 @@
+{
+  "weights": {"trend": 0.30, "momentum": 0.20, "vol": 0.20, "breadth": 0.15, "risk": 0.15},
+  "ampel": {"vix_max": 20, "vix_rise_max_pct": 15, "fear_greed_min": 25}
+}

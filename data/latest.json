@@ -1,6 +1,6 @@
 {
  "date": "2026-11-06",
- "updated": "2026-11-08 12:41 UTC",
+ "updated": "2026-11-08 13:00 UTC",
  "markets": {
   "ALL": {
    "name": "Gesamt",
@@ -98,7 +98,8 @@
   }
  },
  "warnings": [
-  "FRED: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read timed out. (read timeout=30)",
+  "Mitglieder NDX: keine Tabelle gefunden",
+  "FRED: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read timed out. (read timeout=60)",
   "Fear&Greed nicht abrufbar: Expecting value: line 1 column 1 (char 0)"
  ]
 }

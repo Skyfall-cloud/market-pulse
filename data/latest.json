@@ -1,0 +1,104 @@
+{
+ "date": "2026-11-06",
+ "updated": "2026-11-08 12:41 UTC",
+ "markets": {
+  "ALL": {
+   "name": "Gesamt",
+   "score": 54.0,
+   "label": "neutral",
+   "areas": {
+    "trend": 71.2,
+    "momentum": 23.3,
+    "vol": 20.9,
+    "breadth": 65.5,
+    "risk": 100.0
+   }
+  },
+  "SPX": {
+   "name": "S&P 500",
+   "score": 54.1,
+   "label": "neutral",
+   "areas": {
+    "trend": 75.0,
+    "momentum": 16.2,
+    "vol": 20.9,
+    "breadth": 60.9,
+    "risk": 100.0
+   }
+  },
+  "NDX": {
+   "name": "Nasdaq 100",
+   "score": 37.1,
+   "label": "pessimistisch",
+   "areas": {
+    "trend": 35.0,
+    "momentum": 9.2,
+    "vol": 20.9,
+    "risk": 100.0
+   }
+  },
+  "DAX": {
+   "name": "DAX",
+   "score": 69.6,
+   "label": "optimistisch",
+   "areas": {
+    "trend": 100.0,
+    "momentum": 49.7,
+    "vol": 20.9,
+    "breadth": 70.0,
+    "risk": 100.0
+   }
+  },
+  "MSCI": {
+   "name": "MSCI World (URTH)",
+   "score": 55.1,
+   "label": "neutral",
+   "areas": {
+    "trend": 75.0,
+    "momentum": 18.2,
+    "vol": 20.9,
+    "breadth": 65.5,
+    "risk": 100.0
+   }
+  }
+ },
+ "ampel": {
+  "status": "red",
+  "checks": {
+   "trend": false,
+   "vix": false,
+   "fear_greed": null
+  },
+  "items": {
+   "S&P 500": 7376.9,
+   "EMA 21": 7623.8,
+   "SMA 50": 7679.4,
+   "SMA 200": 7325.1,
+   "VIX": 25.6,
+   "VIX Änderung %": -9.0,
+   "Fear & Greed": null
+  }
+ },
+ "crosses": {
+  "SPX": {
+   "type": "Golden Cross",
+   "date": "2025-07-01"
+  },
+  "NDX": {
+   "type": "Golden Cross",
+   "date": "2025-06-24"
+  },
+  "DAX": {
+   "type": "Golden Cross",
+   "date": "2026-06-05"
+  },
+  "MSCI": {
+   "type": "Golden Cross",
+   "date": "2025-06-16"
+  }
+ },
+ "warnings": [
+  "FRED: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read timed out. (read timeout=30)",
+  "Fear&Greed nicht abrufbar: Expecting value: line 1 column 1 (char 0)"
+ ]
+}

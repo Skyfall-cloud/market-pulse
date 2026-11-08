@@ -6,11 +6,14 @@ CFG = json.load(open("config.json")); W = pd.Series(CFG["weights"]); AM = CFG["a
 UA = {"User-Agent": "Mozilla/5.0"}
 MK = {"SPX": ("S&P 500", "^GSPC"), "NDX": ("Nasdaq 100", "^NDX"),
       "DAX": ("DAX", "^GDAXI"), "MSCI": ("MSCI World (URTH)", "URTH")}
-WIKI = {"SPX": ("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies", "Symbol"),
-        "NDX": ("https://en.wikipedia.org/wiki/Nasdaq-100", "Ticker"),
-        "DAX": ("https://en.wikipedia.org/wiki/DAX", "Ticker")}
+WIKI = {"SPX": ["https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"],
+        "NDX": ["https://en.wikipedia.org/wiki/Nasdaq-100",
+                "https://en.wikipedia.org/wiki/List_of_Nasdaq-100_companies",
+                "https://www.slickcharts.com/nasdaq100"],
+        "DAX": ["https://en.wikipedia.org/wiki/DAX"]}
 warn = []
 os.makedirs("data", exist_ok=True)
+
 def log(*a): print(*a, file=sys.stderr)
 
 def dl(tickers, period):
@@ -26,30 +29,27 @@ def dl(tickers, period):
 
 def members():
     cache = json.load(open("data/members.json")) if os.path.exists("data/members.json") else {}
-    for k, (url, col) in WIKI.items():
-        try:
-            html = requests.get(url, headers=UA, timeout=30).text
-            for t in pd.read_html(io.StringIO(html)):
-                cs = [x for x in t.columns if str(x).lower() in ("ticker", "symbol", "ticker symbol")]
-                if cs and len(t) > 20:
-                    s = [str(x).strip() for x in t[cs[0]]]
-                    s = [x if k == "DAX" else x.replace(".", "-") for x in s]
-                    if k == "DAX": s = [x if "." in x else x + ".DE" for x in s]
-                    cache[k] = s; break
-            else: warn.append(f"Mitglieder {k}: keine Tabelle gefunden")
-        except Exception as e: warn.append(f"Mitglieder {k}: {e}")
+    for k, urls in WIKI.items():
+        for url in urls:
+            try:
+                html = requests.get(url, headers=UA, timeout=30).text
+                for t in pd.read_html(io.StringIO(html)):
+                    cs = [x for x in t.columns if str(x).lower() in ("ticker", "symbol", "ticker symbol")]
+                    if cs and len(t) > 20:
+                        m = [str(x).strip() for x in t[cs[0]]]
+                        m = [x if k == "DAX" else x.replace(".", "-") for x in m]
+                        if k == "DAX": m = [x if "." in x else x + ".DE" for x in m]
+                        cache[k] = m; break
+                if k in cache: break
+            except Exception as e: warn.append(f"Mitglieder {k}: {e}")
+        else: warn.append(f"Mitglieder {k}: keine Tabelle gefunden")
     json.dump(cache, open("data/members.json", "w"))
     return cache
 
 def fred(i):
-    for n in range(3):
-        try:
-            r = requests.get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={i}", headers=UA, timeout=60)
-            s = pd.read_csv(io.StringIO(r.text), index_col=0, parse_dates=True).iloc[:, 0]
-            return pd.to_numeric(s, errors="coerce").dropna()
-        except Exception:
-            if n == 2: raise
-            time.sleep(10)
+    r = requests.get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={i}", headers=UA, timeout=30)
+    s = pd.read_csv(io.StringIO(r.text), index_col=0, parse_dates=True).iloc[:, 0]
+    return pd.to_numeric(s, errors="coerce").dropna()
 
 def prank(s, win): return s.rolling(win, min_periods=win // 3).apply(lambda a: (a[:-1] < a[-1]).mean() * 100, raw=True)
 def above(r, n):
@@ -88,9 +88,9 @@ if "^VIX" in D and "^VIX3M" in D: vp.append(((1.1 - D["^VIX"] / D["^VIX3M"]) / 0
 vol = pd.concat(vp, axis=1).ffill().mean(axis=1) if vp else None
 rp = []
 try:
-    hy, d10, d3 = fred("BAMLH0A0HYM2"), fred("DGS10"), fred("DGS3MO")
-    rp += [100 - prank(hy, 1260), ((d10 - d3 + 1) / 3 * 100).clip(0, 100)]
-except Exception as e: warn.append(f"FRED: {e}")
+    y = dl(["^TNX", "^IRX"], "12y")
+    rp.append(((y["^TNX"] - y["^IRX"] + 1) / 3 * 100).clip(0, 100))
+except Exception as e: warn.append(f"Zinskurve: {e}")
 if {"HYG", "LQD"} <= set(D): rp.append(above(D["HYG"] / D["LQD"], 50))
 if {"SPY", "TLT"} <= set(D): rp.append(above(D["SPY"] / D["TLT"], 50))
 risk = pd.concat(rp, axis=1).ffill().mean(axis=1) if rp else None
@@ -133,10 +133,11 @@ try:
     ema21, s50, s200 = c.ewm(span=21).mean().iloc[-1], c.rolling(50).mean().iloc[-1], c.rolling(200).mean().iloc[-1]
     px = c.iloc[-1]; vx = v.iloc[-1]; vch = (vx / v.iloc[-2] - 1) * 100
     fg = None
-    try:
-        hd = {**UA, "Referer": "https://edition.cnn.com/", "Origin": "https://edition.cnn.com"}
-        fg = float(requests.get("https://production.dataviz.cnn.io/index/fearandgreed/graphdata/" + pd.Timestamp.utcnow().strftime("%Y-%m-%d"), headers=hd, timeout=20).json()["fear_and_greed"]["score"])
+    try: fg = float(requests.get("https://production.dataviz.cnn.io/index/fearandgreed/graphdata", headers=UA, timeout=20).json()["fear_and_greed"]["score"])
     except Exception as e: warn.append(f"Fear&Greed nicht abrufbar: {e}")
+    if fg is None:
+        z = [markets["SPX"]["areas"].get(a) for a in ("vol", "breadth", "momentum", "risk")]
+        fg = float(np.mean([x for x in z if x is not None])); warn.append("Fear & Greed: Ersatzwert aus eigenen Indikatoren")
     t_ok = bool(px > ema21 > s50 > s200); v_ok = bool(vx < AM["vix_max"] and vch < AM["vix_rise_max_pct"])
     f_ok = None if fg is None else bool(fg > AM["fear_greed_min"])
     ampel = {"status": "green" if t_ok and v_ok and f_ok is not False else "red",

@@ -30,18 +30,26 @@ def members():
         try:
             html = requests.get(url, headers=UA, timeout=30).text
             for t in pd.read_html(io.StringIO(html)):
-                if col in t.columns and len(t) > 20:
-                    s = [str(x).strip().replace(".", "-") if k != "DAX" else str(x).strip() for x in t[col]]
+                cs = [x for x in t.columns if str(x).lower() in ("ticker", "symbol", "ticker symbol")]
+                if cs and len(t) > 20:
+                    s = [str(x).strip() for x in t[cs[0]]]
+                    s = [x if k == "DAX" else x.replace(".", "-") for x in s]
                     if k == "DAX": s = [x if "." in x else x + ".DE" for x in s]
                     cache[k] = s; break
+            else: warn.append(f"Mitglieder {k}: keine Tabelle gefunden")
         except Exception as e: warn.append(f"Mitglieder {k}: {e}")
     json.dump(cache, open("data/members.json", "w"))
     return cache
 
 def fred(i):
-    r = requests.get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={i}", headers=UA, timeout=30)
-    s = pd.read_csv(io.StringIO(r.text), index_col=0, parse_dates=True).iloc[:, 0]
-    return pd.to_numeric(s, errors="coerce").dropna()
+    for n in range(3):
+        try:
+            r = requests.get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={i}", headers=UA, timeout=60)
+            s = pd.read_csv(io.StringIO(r.text), index_col=0, parse_dates=True).iloc[:, 0]
+            return pd.to_numeric(s, errors="coerce").dropna()
+        except Exception:
+            if n == 2: raise
+            time.sleep(10)
 
 def prank(s, win): return s.rolling(win, min_periods=win // 3).apply(lambda a: (a[:-1] < a[-1]).mean() * 100, raw=True)
 def above(r, n):
@@ -125,7 +133,9 @@ try:
     ema21, s50, s200 = c.ewm(span=21).mean().iloc[-1], c.rolling(50).mean().iloc[-1], c.rolling(200).mean().iloc[-1]
     px = c.iloc[-1]; vx = v.iloc[-1]; vch = (vx / v.iloc[-2] - 1) * 100
     fg = None
-    try: fg = float(requests.get("https://production.dataviz.cnn.io/index/fearandgreed/graphdata", headers=UA, timeout=20).json()["fear_and_greed"]["score"])
+    try:
+        hd = {**UA, "Referer": "https://edition.cnn.com/", "Origin": "https://edition.cnn.com"}
+        fg = float(requests.get("https://production.dataviz.cnn.io/index/fearandgreed/graphdata/" + pd.Timestamp.utcnow().strftime("%Y-%m-%d"), headers=hd, timeout=20).json()["fear_and_greed"]["score"])
     except Exception as e: warn.append(f"Fear&Greed nicht abrufbar: {e}")
     t_ok = bool(px > ema21 > s50 > s200); v_ok = bool(vx < AM["vix_max"] and vch < AM["vix_rise_max_pct"])
     f_ok = None if fg is None else bool(fg > AM["fear_greed_min"])

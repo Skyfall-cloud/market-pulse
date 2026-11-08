@@ -10,7 +10,7 @@ WIKI = {"SPX": ("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies", "Sy
         "NDX": ("https://en.wikipedia.org/wiki/Nasdaq-100", "Ticker"),
         "DAX": ("https://en.wikipedia.org/wiki/DAX", "Ticker")}
 warn = []
-
+os.makedirs("data", exist_ok=True)
 def log(*a): print(*a, file=sys.stderr)
 
 def dl(tickers, period):

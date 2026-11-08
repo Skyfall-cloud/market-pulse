@@ -1,64 +1,64 @@
 {
  "date": "2026-11-06",
- "updated": "2026-11-08 13:00 UTC",
+ "updated": "2026-11-08 13:11 UTC",
  "markets": {
   "ALL": {
    "name": "Gesamt",
-   "score": 54.0,
+   "score": 52.0,
    "label": "neutral",
    "areas": {
     "trend": 71.2,
     "momentum": 23.3,
     "vol": 20.9,
     "breadth": 65.5,
-    "risk": 100.0
+    "risk": 87.3
    }
   },
   "SPX": {
    "name": "S&P 500",
-   "score": 54.1,
+   "score": 52.2,
    "label": "neutral",
    "areas": {
     "trend": 75.0,
     "momentum": 16.2,
     "vol": 20.9,
     "breadth": 60.9,
-    "risk": 100.0
+    "risk": 87.3
    }
   },
   "NDX": {
    "name": "Nasdaq 100",
-   "score": 37.1,
+   "score": 34.8,
    "label": "pessimistisch",
    "areas": {
     "trend": 35.0,
     "momentum": 9.2,
     "vol": 20.9,
-    "risk": 100.0
+    "risk": 87.3
    }
   },
   "DAX": {
    "name": "DAX",
-   "score": 69.6,
+   "score": 67.7,
    "label": "optimistisch",
    "areas": {
     "trend": 100.0,
     "momentum": 49.7,
     "vol": 20.9,
     "breadth": 70.0,
-    "risk": 100.0
+    "risk": 87.3
    }
   },
   "MSCI": {
    "name": "MSCI World (URTH)",
-   "score": 55.1,
+   "score": 53.2,
    "label": "neutral",
    "areas": {
     "trend": 75.0,
     "momentum": 18.2,
     "vol": 20.9,
     "breadth": 65.5,
-    "risk": 100.0
+    "risk": 87.3
    }
   }
  },
@@ -67,7 +67,7 @@
   "checks": {
    "trend": false,
    "vix": false,
-   "fear_greed": null
+   "fear_greed": true
   },
   "items": {
    "S&P 500": 7376.9,
@@ -76,7 +76,7 @@
    "SMA 200": 7325.1,
    "VIX": 25.6,
    "VIX Änderung %": -9.0,
-   "Fear & Greed": null
+   "Fear & Greed": 46
   }
  },
  "crosses": {
@@ -98,8 +98,10 @@
   }
  },
  "warnings": [
+  "Mitglieder NDX: `Import html5lib` failed.  Use pip, conda, or your preferred package management tool to install the html5lib package.",
+  "Mitglieder NDX: `Import html5lib` failed.  Use pip, conda, or your preferred package management tool to install the html5lib package.",
   "Mitglieder NDX: keine Tabelle gefunden",
-  "FRED: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read timed out. (read timeout=60)",
-  "Fear&Greed nicht abrufbar: Expecting value: line 1 column 1 (char 0)"
+  "Fear&Greed nicht abrufbar: Expecting value: line 1 column 1 (char 0)",
+  "Fear & Greed: Ersatzwert aus eigenen Indikatoren"
  ]
 }
